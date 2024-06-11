@@ -4,8 +4,31 @@ import (
 	"GoInterpreter/src/ast"
 	"GoInterpreter/src/lexer"
 	"GoInterpreter/src/parser"
+	"GoInterpreter/src/token"
 	"testing"
 )
+
+func TestString(t *testing.T) {
+	p := &ast.Program{
+		Statements: []ast.Statement{
+			&ast.Let{
+				Token: token.Token{Type: token.LET, Literal: "let"},
+				Name: &ast.Identifier{
+					Token: token.Token{Type: token.IDENT, Literal: "foo"},
+					Value: "foo",
+				},
+				Value: &ast.Identifier{
+					Token: token.Token{Type: token.IDENT, Literal: "bar"},
+					Value: "bar",
+				},
+			},
+		},
+	}
+
+	if p.String() != "let foo = bar;" {
+		t.Errorf("String Mistmatch. Got: %s", p.String())
+	}
+}
 
 func TestReturnStatements(t *testing.T) {
 	input := `
