@@ -41,6 +41,8 @@ func (p *Parser) parse() ast.Statement {
 	switch p.current.Type {
 	case token.LET:
 		return p.let()
+	case token.RETURN:
+		return p.returnSt()
 	default:
 		return nil
 	}
@@ -56,6 +58,18 @@ func (p *Parser) let() *ast.Let {
 	if !p.expectPeek(token.ASSIGN) {
 		return nil
 	}
+
+	for !p.currentTokenIs(token.SEMICOLON) {
+		p.next()
+	}
+
+	return s
+}
+
+func (p *Parser) returnSt() *ast.Return {
+	s := &ast.Return{Token: p.current}
+
+	p.next()
 
 	for !p.currentTokenIs(token.SEMICOLON) {
 		p.next()

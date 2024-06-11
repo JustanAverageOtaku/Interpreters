@@ -7,6 +7,36 @@ import (
 	"testing"
 )
 
+func TestReturnStatements(t *testing.T) {
+	input := `
+   	return 5;
+   	return 10;
+   	return 993322;
+   	`
+
+	l := lexer.New(input)
+	p := parser.New(l)
+
+	program := p.Parse()
+	checkParseErrors(t, p)
+
+	if len(program.Statements) != 3 {
+		t.Fatalf("program.Statements does not contain the required statements. Expected: %d, Got: %d", 3, len(program.Statements))
+	}
+
+	for _, s := range program.Statements {
+		rs, ok := s.(*ast.Return)
+		if !ok {
+			t.Errorf("Starement is not an ast return statement. Got: %T", s)
+			continue
+		}
+
+		if rs.Token.Literal != "return" {
+			t.Errorf("The literal for return statement is not 'return'. Got: %s", rs.Token.Literal)
+		}
+	}
+}
+
 func TestLetStatements(t *testing.T) {
 	input := `
 	let x = 5;
