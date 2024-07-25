@@ -48,6 +48,16 @@ type (
 	}
 
 	// Expressions
+	IntegerLiteral struct {
+		Token token.Token
+		Value int64
+	}
+
+	PrefixEpression struct {
+		Token    token.Token
+		Operator string
+		Right    Expression
+	}
 )
 
 func (p *Program) Literal() string {
@@ -114,4 +124,21 @@ func (es *ExpressionSt) String() string {
 	}
 
 	return ""
+}
+
+func (il *IntegerLiteral) expressionNode() {}
+func (il *IntegerLiteral) Literal() string { return il.Token.Literal }
+func (il *IntegerLiteral) String() string  { return il.Token.Literal }
+
+func (pe *PrefixEpression) expressionNode() {}
+func (pe *PrefixEpression) Literal() string { return pe.Token.Literal }
+func (pe *PrefixEpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(pe.Operator)
+	out.WriteString(pe.Right.String())
+	out.WriteString(")")
+
+	return out.String()
 }

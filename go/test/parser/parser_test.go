@@ -5,8 +5,115 @@ import (
 	"GoInterpreter/src/lexer"
 	"GoInterpreter/src/parser"
 	"GoInterpreter/src/token"
+	"fmt"
 	"testing"
 )
+
+func TestParsingPrefixFunc(t *testing.T) {
+	es := 1
+	prefixTests := []struct {
+		input    string
+		operator string
+		value    int64
+	}{
+		{"!5", "!", 5},
+		{"-15", "-", 15},
+	}
+
+	for _, tt := range prefixTests {
+		lexer := lexer.New(tt.input)
+		parser := parser.New(lexer)
+
+		tree := parser.Parse()
+		checkParseErrors(t, parser)
+
+		if len(tree.Statements) != es {
+			t.Fatalf("Incorrect number of statements parsed. Expected:%d Got:%d", es, len(tree.Statements))
+		}
+
+		stmt, ok := tree.Statements[0].(*ast.ExpressionSt)
+		if !ok {
+			t.Fatalf("The parsed statement is not an epression statement. Got:%T", tree.Statements[0])
+		}
+
+		expr, ok := stmt.Expression.(*ast.PrefixEpression)
+		if !ok {
+			t.Fatalf("The parsed expression is not a prefix expression. Got:%T", stmt.Expression)
+		}
+
+		if expr.Operator != tt.operator {
+			t.Fatalf("The parsed operator does not match the expected one. Expected:%s Got:%s", tt.operator, expr.Operator)
+		}
+
+		if !testIntegerLiteral(t, expr.Right, tt.value) {
+			return
+		}
+	}
+}
+
+func TestIdentifierExpression(t *testing.T) {
+	input := "expression"
+
+	lexer := lexer.New(input)
+	parser := parser.New(lexer)
+
+	tree := parser.Parse()
+	checkParseErrors(t, parser)
+
+	if len(tree.Statements) != 1 {
+		t.Fatalf("Incorrect number of statements parsed. Got:%d", len(tree.Statements))
+	}
+
+	stmt, ok := tree.Statements[0].(*ast.ExpressionSt)
+	if !ok {
+		t.Fatalf("The parsed statement is not an expression statemet. Got:%T", tree.Statements[0])
+	}
+
+	identifier, ok := stmt.Expression.(*ast.Identifier)
+	if !ok {
+		t.Fatalf("The parsed statemet is not a valid identifier. Got:%T", stmt.Expression)
+	}
+
+	if identifier.Value != "expression" {
+		t.Errorf("The parsed value for the identifier is incorrect. Got:%s", identifier.Value)
+	}
+
+	if identifier.Literal() != "expression" {
+		t.Errorf("The parsed literal for the identifier is incorrect. Got:%s", identifier.Literal())
+	}
+}
+
+func TestIntegerLiteralExpression(t *testing.T) {
+	input := "5;"
+
+	lexer := lexer.New(input)
+	parser := parser.New(lexer)
+
+	tree := parser.Parse()
+	checkParseErrors(t, parser)
+
+	if len(tree.Statements) != 1 {
+		t.Fatalf("Incorrect number of statements parsed. Got:%d", len(tree.Statements))
+	}
+
+	stmt, ok := tree.Statements[0].(*ast.ExpressionSt)
+	if !ok {
+		t.Fatalf("The parsed statement is not an expression statemet. Got:%T", tree.Statements[0])
+	}
+
+	identifier, ok := stmt.Expression.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("The parsed statemet is not a valid integer. Got:%T", stmt.Expression)
+	}
+
+	if identifier.Value != 5 {
+		t.Errorf("The parsed value for the identifier is incorrect. Got:%d", identifier.Value)
+	}
+
+	if identifier.Literal() != "5" {
+		t.Errorf("The parsed literal for the identifier is incorrect. Got:%s", identifier.Literal())
+	}
+}
 
 func TestString(t *testing.T) {
 	p := &ast.Program{
@@ -93,6 +200,26 @@ func TestLetStatements(t *testing.T) {
 			return
 		}
 	}
+}
+
+func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
+	lit, ok := il.(*ast.IntegerLiteral)
+	if !ok {
+		t.Errorf("The parsed expression is not a valid integer literal. Got:%T", il)
+		return false
+	}
+
+	if lit.Value != value {
+		t.Errorf("The parsed value does not equal the expected one. Expected:%d Got:%d", value, lit.Value)
+		return false
+	}
+
+	if lit.Literal() != fmt.Sprintf("%d", value) {
+		t.Errorf("Token mismatch. Expected:%d Got:%s", value, lit.Literal())
+		return false
+	}
+
+	return true
 }
 
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
